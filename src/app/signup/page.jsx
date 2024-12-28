@@ -1,5 +1,7 @@
 "use client";
+import { signUp } from "@/services/userService";
 import React, { useState } from "react";
+import { toast } from "react-toastify";
 
 const SignUpPage = () => {
   const [formData, setFormData] = useState({
@@ -18,9 +20,20 @@ const SignUpPage = () => {
     });
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    console.log("Form Data Submitted:", formData);
+
+    try {
+      // calling user service
+      const result = await signUp(formData);
+      console.log(result);
+      toast.success("Sign Up !");
+    } catch (error) {
+      console.log(error);
+      toast.error("Error in Signup", {
+        position: "top-center",
+      });
+    }
   };
 
   return (

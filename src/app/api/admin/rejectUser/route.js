@@ -6,10 +6,10 @@ connectDb();
 
 export async function POST(request) {
   try {
-    const { userId } = await request.json();
-
+    const { id } = await request.json();
+    console.log(id);
     // Delete the user from the database
-    const user = await User.findByIdAndDelete(userId);
+    const user = await User.findByIdAndDelete(id);
 
     if (!user) {
       throw new Error("User not found");

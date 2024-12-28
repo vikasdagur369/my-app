@@ -1,95 +1,99 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import { approve, fetchPendingRequests, reject } from "@/services/adminService";
+import { useEffect, useState } from "react";
 
 const AdminDashboard = () => {
-  const [requests, setRequests] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Fetch pending requests from the server
+  // Fetching accounts from server with isApproved=false
   useEffect(() => {
-    const fetchRequests = async () => {
-      const response = await fetch("/api/admin/requests"); // Replace with your API endpoint
-      const data = await response.json();
-      setRequests(data.requests);
+    const loadPendingRequests = async () => {
+      try {
+        const data = await fetchPendingRequests();
+        setPendingRequests(data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching pending requests:", err);
+        setError("Failed to load pending requests.");
+        setLoading(false);
+      }
     };
 
-    fetchRequests();
+    loadPendingRequests();
   }, []);
 
-  // Handle Approve/Reject Actions
-  const handleAction = async (id, action) => {
+  // Handle approve button functionality
+  const handleApprove = async (id) => {
     try {
-      const response = await fetch(`/api/admin/requests/${id}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ action }),
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        // Update the UI after approval/rejection
-        setRequests((prevRequests) =>
-          prevRequests.filter((request) => request.id !== id)
-        );
-      } else {
-        alert(result.message);
-      }
+      await approve(id);
+      console.log(`Approved user with ID: ${id}`);
+      // Update UI: Remove approved user
+      setPendingRequests((prev) => prev.filter((user) => user._id !== id));
     } catch (error) {
-      console.error("Error handling request:", error);
+      console.error("Error while approving user:", error.message);
+      alert("Failed to approve user. Please try again.");
+    }
+  };
+
+  // Handle reject button functionality
+  const handleReject = async (id) => {
+    try {
+      await reject(id);
+      console.log(`Rejected user with ID: ${id}`);
+      setPendingRequests((prev) => prev.filter((user) => user._id !== id));
+    } catch (error) {
+      console.error("Error while rejecting user:", error.message);
+      alert("Failed to reject user. Please try again.");
     }
   };
 
   return (
-    <div className="p-8 min-h-screen bg-gradient-to-br from-gray-50 to-gray-200">
-      <h1 className="text-4xl font-bold text-center mb-8 text-gray-800">
+    <div className="min-h-screen bg-gray-100 p-8">
+      <h1 className="text-3xl font-bold text-center mb-8 text-green-500">
         Admin Dashboard
       </h1>
-      <div className="bg-white shadow-lg rounded-lg p-6">
-        <h2 className="text-2xl font-semibold mb-6 text-gray-700">
-          Pending Account Approvals
-        </h2>
-        <table className="w-full table-auto border-collapse">
+      {loading && <p className="text-center">Loading pending requests...</p>}
+      {error && <p className="text-center text-red-500">{error}</p>}
+      {!loading && pendingRequests.length === 0 && (
+        <p className="text-center text-gray-600">No pending requests found.</p>
+      )}
+      <div className="max-w-4xl mx-auto">
+        <table className="w-full bg-white rounded shadow">
           <thead>
-            <tr className="bg-gray-800 text-white">
-              <th className="px-4 py-3 text-left">Name</th>
-              <th className="px-4 py-3 text-left">Email</th>
-              <th className="px-4 py-3 text-left">Role</th>
-              <th className="px-4 py-3 text-center">Actions</th>
+            <tr className="bg-gray-200 text-gray-700">
+              <th className="py-3 px-4 text-left">Name</th>
+              <th className="py-3 px-4 text-left">Student ID</th>
+              <th className="py-3 px-4 text-left">Year</th>
+              <th className="py-3 px-4 text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {requests.length > 0 ? (
-              requests.map((request) => (
-                <tr key={request.id} className="border-b hover:bg-gray-100">
-                  <td className="px-4 py-3 text-gray-800">{request.name}</td>
-                  <td className="px-4 py-3 text-gray-800">{request.email}</td>
-                  <td className="px-4 py-3 text-gray-800">
-                    {request.role || "Student"}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <button
-                      onClick={() => handleAction(request.id, "approve")}
-                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 mr-2"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleAction(request.id, "reject")}
-                      className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-                    >
-                      Reject
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="4" className="text-center py-4 text-gray-500">
-                  No pending requests.
+            {pendingRequests.map((request) => (
+              <tr
+                key={request._id}
+                className="border-t hover:bg-gray-50 text-gray-700"
+              >
+                <td className="py-3 px-4">{request.fullName}</td>
+                <td className="py-3 px-4">{request.studentID}</td>
+                <td className="py-3 px-4">{request.year}</td>
+                <td className="py-3 px-4 flex justify-center space-x-2">
+                  <button
+                    onClick={() => handleApprove(request._id)}
+                    className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => handleReject(request._id)}
+                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    Reject
+                  </button>
                 </td>
               </tr>
-            )}
+            ))}
           </tbody>
         </table>
       </div>

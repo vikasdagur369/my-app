@@ -1,4 +1,4 @@
-import mongoose  from "mongoose";
+import mongoose from "mongoose";
 import { Schema } from "mongoose";
 const userSchema = new Schema(
   {
@@ -32,6 +32,6 @@ const userSchema = new Schema(
     isApproved: { type: Boolean, default: false },
   },
   { timestamps: true }
-); 
+);
 
-export const User = mongoose.model("User", userSchema);
+export const User = mongoose.models.User || mongoose.model("User", userSchema);

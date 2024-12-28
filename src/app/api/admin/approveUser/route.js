@@ -4,13 +4,14 @@ import { NextResponse } from "next/server";
 
 connectDb();
 
-export async function POST(request) {
+export async function PATCH(request) {
   try {
-    const { userId } = await request.json(); // Extract userId from request body
+    const { id } = await request.json(); // Extract userId from request body
 
+    console.log("userId:", id);
     // Find the user and set `isApproved: true`
     const user = await User.findByIdAndUpdate(
-      userId,
+      id,
       { isApproved: true },
       { new: true }
     );
