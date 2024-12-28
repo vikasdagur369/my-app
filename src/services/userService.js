@@ -22,3 +22,16 @@ export async function signUp(formData) {
     );
   }
 }
+//----------------------------------------------------------------------------
+
+export async function login(loginData) {
+  try {
+    const response = await httpAxios.post("/api/users/login", loginData);
+
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to login. Please try again."
+    );
+  }
+}
