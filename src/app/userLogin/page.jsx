@@ -1,9 +1,12 @@
 "use client";
 import { login } from "@/services/userService";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { toast } from "react-toastify";
 
 const LoginPage = () => {
+  const router = useRouter();
+
   const [loginData, setLoginData] = useState({
     studentID: "",
     password: "",
@@ -19,6 +22,7 @@ const LoginPage = () => {
       const result = await login(loginData);
       console.log(result);
       toast.success("Login successful!");
+      router.push("/user/profile");
     } catch (error) {
       console.log(error);
       toast.error("error in login", {
